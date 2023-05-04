@@ -11,7 +11,7 @@ try:
    database="test_db",  # TO BE REPLACED
    user='test_user',    # TO BE REPLACED
    password='password', # TO BE REPLACED
-   host='dbcourse2022.cs.aalto.fi', 
+   host='dbcourse.cs.aalto.fi', 
    port= '5432'
    )
 

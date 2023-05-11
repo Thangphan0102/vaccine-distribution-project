@@ -13,7 +13,7 @@ git clone git@version.aalto.fi<your-teammate-name>/<project-repo-name>.git
 ```
 -   [Add a remote to keep your fork synced with the official repository](https://docs.gitlab.com/ee/user/project/repository/forking_workflow.html#repository-mirroring)
 ```
-git remote add upstream git@version.aalto.fi:cs-a1153_databases_projects/project-vaccine-distribution.git
+git remote add upstream git@version.aalto.fi:databases_projects/summer-2023/project-vaccine-distribution.git
 git pull upstream main                                  # if the official repository is updated you must pull the upstream
 git push origin main                                    # Update your public repository
 ```

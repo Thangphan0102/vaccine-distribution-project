@@ -60,3 +60,12 @@ print(data['Transportation log'])
 tables={}
 tables['VaccineType']='VaccineType'
 print(data['Transportation log']['batchID'])
+
+print((data['VaccineBatch']['manufacturer']))
+print(data['VaccineBatch'].describe())
+print((data['VaccineBatch']['manufacturer'].iloc[[18]]))
+
+result = data['VaccineType'].dtypes
+
+
+print(result)

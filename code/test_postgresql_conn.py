@@ -61,9 +61,18 @@ try:
     engine = create_engine(DIALECT + db_uri)
     psql_conn = engine.connect()
 
+    # Renaming columns
+    data['Transportation log'].rename(columns={'departure ': 'departure'}, inplace=True)
+    data['StaffMembers'].rename(columns={'social security number': 'ssno',
+                'date of birth': 'birthday', 'vaccination status': 'status'}, inplace=True)
+    data['Patients'].rename(columns={'date of birth': 'birthday'}, inplace=True)
+    data['Vaccinations'].rename(columns={'location ': 'location'}, inplace=True)
+
+    # populating SQL tables from the dataframe sheet by sheet
     for key in tables:
         print(data[tables[key]])
         data[tables[key]].to_sql(key, con=psql_conn, if_exists='append', index=False)
+
 
 except (Exception, Error) as error:
     print("Error while connecting to PostgreSQL", error)

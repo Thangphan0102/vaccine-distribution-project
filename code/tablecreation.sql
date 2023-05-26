@@ -1,4 +1,4 @@
-CREATE TYPE binary_enum AS ENUM ('0', '1'); --I'm not sure do we need this one, we can use boolean
+--CREATE TYPE binary_enum AS ENUM ('0', '1'); --I'm not sure do we need this one, we can use boolean
 
 CREATE TYPE staff AS ENUM (
   'nurse',
@@ -67,12 +67,12 @@ CREATE TABLE TransportationLog (
 );
 
 CREATE TABLE StaffMembers (
-  ssNo char(11) PRIMARY KEY, --added UNIQUE constraint
+  ssNo varchar PRIMARY KEY, --added UNIQUE constraint
   name varchar (30) NOT NULL,
   birthday date NOT NULL, --changed the data type
   phone varchar (20),
   role staff DEFAULT null,
-  status binary_enum DEFAULT null, --changed the data type back
+  status int CHECK (status = 0 OR status = 1) DEFAULT null, --changed the data type again
   hospital varchar (50),
   foreign key (hospital) references VaccinationStations(name)
 );
@@ -80,7 +80,7 @@ CREATE TABLE StaffMembers (
 create table Shifts(
   station varchar (50),
   weekday weekdays NOT NULL,
-  worker char(11),
+  worker varchar,
   foreign key (station) references VaccinationStations(name),
   foreign key (worker) references StaffMembers(ssNo),
   PRIMARY KEY (station, weekday, worker)
@@ -96,7 +96,7 @@ CREATE TABLE Vaccinations ( --added table
 );
 
 CREATE TABLE Patients (
-  ssNo char(13) PRIMARY KEY,
+  ssNo varchar PRIMARY KEY,
   name varchar NOT NULL,
   birthday date NOT NULL,
   gender genders NOT NULL
@@ -105,7 +105,7 @@ CREATE TABLE Patients (
 CREATE TABLE VaccinePatients (
   date date ,
   location varchar,
-  patientSsNo char(11), --changed to match the example data column name
+  patientSsNo varchar, --changed to match the example data column name
   foreign key (patientSsNo) references Patients(ssNo),
   foreign key (location) references VaccinationStations(name),
   PRIMARY KEY (date, patientSsNo)
@@ -114,11 +114,11 @@ CREATE TABLE VaccinePatients (
 
 CREATE TABLE Symptoms (
   name varchar(50) PRIMARY KEY,  --name changed back to name
-  criticality binary_enum NOT NULL
+  criticality int CHECK (criticality = 0 OR criticality = 1) NOT NULL
 );
 
 CREATE TABLE Diagnosis ( --changed name to match the sheet name
-  patient char(11),
+  patient char,
   symptom varchar not null,
   date date not null,
   foreign key (patient) references Patients(ssNo),

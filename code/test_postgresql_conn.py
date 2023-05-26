@@ -1,6 +1,7 @@
 # Source: https://pynative.com/python-postgresql-tutorial/
 import psycopg2
 from psycopg2 import Error
+import pandas
 
 try:
    # Connect to an test database 
@@ -33,3 +34,21 @@ finally:
       cursor.close()
       connection.close()
       print("PostgreSQL connection is closed")
+
+import os
+import pandas as pd
+import openpyxl
+# Get the directory path of the current script
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Remove the "/code" part from the script directory path
+parent_dir = os.path.dirname(script_dir)
+
+# Construct the relative file path
+file_path = os.path.join(parent_dir, 'data', 'vaccine-distribution-data.xlsx')
+
+# Read the Excel file into a pandas DataFrame
+df = pd.read_excel(file_path)
+
+# Use the DataFrame for further processing or analysis
+

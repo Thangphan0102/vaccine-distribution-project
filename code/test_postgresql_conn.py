@@ -56,4 +56,7 @@ data={}
 for sheet in sheet_names:
    data[sheet]=df.parse(sheet)
 print(data.keys())
-
+print(data['Transportation log'])
+tables={}
+tables['VaccineType']='VaccineType'
+print(data['Transportation log']['batchID'])

@@ -48,7 +48,12 @@ parent_dir = os.path.dirname(script_dir)
 file_path = os.path.join(parent_dir, 'data', 'vaccine-distribution-data.xlsx')
 
 # Read the Excel file into a pandas DataFrame
-df = pd.read_excel(file_path)
+df = pd.ExcelFile(file_path)
 
 # Use the DataFrame for further processing or analysis
+sheet_names=df.sheet_names
+data={}
+for sheet in sheet_names:
+   data[sheet]=df.parse(sheet)
+print(data.keys())
 

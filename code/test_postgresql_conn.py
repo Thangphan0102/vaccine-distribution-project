@@ -22,9 +22,12 @@ try:
    sheet_names=df.sheet_names
    data={}
    for sheet in sheet_names:
-      data[sheet]=df.parse(sheet)
+      temp=df.parse(sheet)
+      temp.columns = temp.columns.str.lower()
+      data[sheet]=temp
    tables={}
-   tables['VaccineType']='VaccineType'
+   tables['vaccinetype']='VaccineType'
+   tables['manufacturer']='Manufacturer'
 
 
    # Connect to an test database 
@@ -50,7 +53,9 @@ try:
    engine = create_engine(DIALECT + db_uri)
    psql_conn = engine.connect()
 
-   data[tables['VaccineType']].to_sql('VaccineType', con=psql_conn, if_exists='replace', index=False)
+   for key in tables:
+      print(data[tables[key]])
+      data[tables[key]].to_sql(key, con=psql_conn, if_exists='append', index=False)
 
 except (Exception, Error) as error:
    print("Error while connecting to PostgreSQL", error)

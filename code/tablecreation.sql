@@ -27,16 +27,19 @@ CREATE TABLE  VaccineType(
      tempMax Int CHECK (tempMax >= -90 AND tempMax <= 8 and tempMax>=tempMin) NOT NULL
 );
 
-
-
-
 CREATE TABLE  Manufacturer(
      ID varchar(2) PRIMARY KEY, --added UNIQUE constraint
      country varchar(30), --decreased the size to 30
      phone varchar(20), --removed the UNIQUE constraint as I don't find it necessary, decreased varchar size to 12
+     vaccine varchar (3),
      FOREIGN KEY (vaccine) REFERENCES VaccineType(ID) --changed this one to a foreign key
 );
 
+CREATE TABLE VaccinationStations ( --name changed to plural
+  name varchar (50) PRIMARY KEY NOT NULL, --name changed back to name
+  address varchar (100) DEFAULT null,
+  phone varchar (20) DEFAULT null
+);
 
 CREATE TABLE  VaccineBatch(
      batchID varchar(4) PRIMARY KEY NOT NULL,
@@ -49,14 +52,6 @@ CREATE TABLE  VaccineBatch(
      FOREIGN key (manufacturer) REFERENCES Manufacturer(ID),
      FOREIGN key (type) REFERENCES VaccineType(ID),
      FOREIGN KEY (location) REFERENCES VaccinationStations(name)
-);
-
-
-
-CREATE TABLE VaccinationStations ( --name changed to plural
-  name varchar (50) PRIMARY KEY NOT NULL, --name changed back to name
-  address varchar (100) DEFAULT null,
-  phone varchar (20) DEFAULT null
 );
 
 CREATE TABLE TransportationLog (
@@ -93,6 +88,8 @@ create table Shifts(
 
 CREATE TABLE Vaccinations ( --added table
   date date,
+  location varchar (50),
+  batchID varchar (4),
   foreign key (location) references VaccinationStations(name),
   foreign key (batchID) references VaccineBatch(batchID),
   PRIMARY KEY (date, location)
@@ -111,8 +108,8 @@ CREATE TABLE VaccinePatients (
   patientSsNo char(11), --changed to match the example data column name
   foreign key (patientSsNo) references Patients(ssNo),
   foreign key (location) references VaccinationStations(name),
-  PRIMARY KEY (date, ssNo)
-  
+  PRIMARY KEY (date, patientSsNo)
+
 );
 
 CREATE TABLE Symptoms (
@@ -126,18 +123,18 @@ CREATE TABLE Diagnosis ( --changed name to match the sheet name
   date date not null,
   foreign key (patient) references Patients(ssNo),
   foreign key (symptom) references Symptoms(name),
-  PRIMARY KEY (ssNo, symptom) --changed the other attribute to symptom, in case one patient reports several symptoms
+  PRIMARY KEY (patient, symptom) --changed the other attribute to symptom, in case one patient reports several symptoms
 );
 
-create table Appointment(
-	patient char(11) not null,
-	doctor char(11) not null,
-	date date,
-	location varchar,
-	timeSlot int,
-	foreign key (patient) references Patients(ssNo),
-	foreign key (doctor) references StaffMembers(ssNo),
-	foreign key (location) references VaccinationStations(name),
-	PRIMARY KEY (patient, doctor, date, location, timeslot)
-);
 
+--create table Appointment(
+--	patient char(11) not null,
+--	doctor char(11) not null,
+--	date date,
+--	location varchar,
+--	timeSlot int,
+--	foreign key (patient) references Patients(ssNo),
+--	foreign key (doctor) references StaffMembers(ssNo),
+--	foreign key (location) references VaccinationStations(name),
+--	PRIMARY KEY (patient, doctor, date, location timeslot)
+--);

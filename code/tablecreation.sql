@@ -19,6 +19,30 @@
 --  'F'
 --);
 
+DROP TABLE IF EXISTS transportationlog;
+
+DROP TABLE IF EXISTS shifts;
+
+DROP TABLE IF EXISTS staffmembers;
+
+DROP TABLE IF EXISTS vaccinations;
+
+DROP TABLE IF EXISTS vaccinebatch;
+
+DROP TABLE IF EXISTS manufacturer;
+
+DROP TABLE IF EXISTS vaccinetype;
+
+DROP TABLE IF EXISTS vaccinepatients;
+
+DROP TABLE IF EXISTS vaccinationstations;
+
+DROP TABLE IF EXISTS diagnosis;
+
+DROP TABLE IF EXISTS patients;
+
+DROP TABLE IF EXISTS symptoms;
+
 CREATE TABLE  VaccineType(
      ID varchar(3) PRIMARY KEY UNIQUE NOT NULL, --added UNIQUE constraint
      name varchar(30) NOT NULL, --decreased the size to 30
@@ -123,7 +147,7 @@ CREATE TABLE Diagnosis ( --changed name to match the sheet name
   date date not null,
   foreign key (patient) references Patients(ssNo),
   foreign key (symptom) references Symptoms(name),
-  PRIMARY KEY (patient, symptom) --changed the other attribute to symptom, in case one patient reports several symptoms
+  PRIMARY KEY (patient, symptom, date) --changed the other attribute to symptom, in case one patient reports several symptoms
 );
 
 

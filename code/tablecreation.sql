@@ -1,23 +1,23 @@
 --CREATE TYPE binary_enum AS ENUM ('0', '1'); --I'm not sure do we need this one, we can use boolean
 
-CREATE TYPE staff AS ENUM (
-  'nurse',
-  'doctor',
-  'null'
-);
+--CREATE TYPE staff AS ENUM (
+--  'nurse',
+--  'doctor',
+--  'null'
+--);
 
-CREATE TYPE weekdays AS ENUM (
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday'
-);
+--CREATE TYPE weekdays AS ENUM (
+--  'Monday',
+--  'Tuesday',
+--  'Wednesday',
+--  'Thursday',
+--  'Friday'
+--);
 
-CREATE TYPE genders AS ENUM (
-  'M',
-  'F'
-);
+--CREATE TYPE genders AS ENUM (
+--  'M',
+--  'F'
+--);
 
 CREATE TABLE  VaccineType(
      ID varchar(3) PRIMARY KEY UNIQUE NOT NULL, --added UNIQUE constraint
@@ -118,7 +118,7 @@ CREATE TABLE Symptoms (
 );
 
 CREATE TABLE Diagnosis ( --changed name to match the sheet name
-  patient char,
+  patient varchar,
   symptom varchar not null,
   date date not null,
   foreign key (patient) references Patients(ssNo),

@@ -45,16 +45,16 @@ AND vaccinationstations.name = latestlocation.arrival;
 
 -- Query 4: all patients with critical symptoms diagnosed after 10.5.21 matched with vaccination data
 
-SELECT diagnosis.patient AS patient, vaccinebatch.batchID AS batchID, --can't test ths one yet
+SELECT diagnosis.patient AS patient, vaccinebatch.batchID AS batchID,
     vaccinetype.name AS vaccineType, vaccinations.date AS date,
     vaccinations.location AS location
-FROM vaccinebatch, diagnosis, vaccinetype, vaccinations, symptoms, vaccinepatients
+FROM vaccinebatch, diagnosis, vaccinetype, vaccinations, symptoms, vaccinepatients, manufacturer
     WHERE symptoms.criticality = 1
     AND diagnosis.symptom = symptoms.name
     AND diagnosis.date > '2021-05-10'
     AND diagnosis.patient = vaccinepatients.patientssno
     AND vaccinations.batchID = vaccinebatch.batchid
-    AND vaccinebatch.type = vaccinetype.id
+    AND vaccinebatch.manufacturer = manufacturer
     AND vaccinepatients.location = vaccinations.location
     AND vaccinepatients.date = vaccinations.date;
 
@@ -77,7 +77,7 @@ FROM (SELECT patientssno, COUNT(*) AS doses_took
 SELECT sub.location,
        sub.vaccine,
        sub.amount,
-       SUM(sub.amount) OVER (PARTITION BY sub.location) AS amount
+       SUM(sub.amount) OVER (PARTITION BY sub.location) AS totalamount
 FROM (SELECT location, mf.vaccine, SUM(amount) AS amount
       FROM vaccinebatch vb
                JOIN manufacturer mf

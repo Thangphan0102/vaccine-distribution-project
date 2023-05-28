@@ -48,10 +48,10 @@ try:
     host = 'dbcourse.cs.aalto.fi'
 
     connection = psycopg2.connect(
-        database="grp02db_2023",  # TO BE REPLACED
-        user='grp02_2023',  # TO BE REPLACED
-        password='A88z1c6B',  # TO BE REPLACED
-        host='dbcourse.cs.aalto.fi',
+        database=database,  # TO BE REPLACED
+        user=user,  # TO BE REPLACED
+        password=password,  # TO BE REPLACED
+        host=host,
         port='5432'
     )
     connection.autocommit = True
@@ -81,6 +81,8 @@ try:
     data['Diagnosis'].loc[data['Diagnosis']['patient'] == '730126-956K', 'date'] = '2021-02-28'
     data['Diagnosis'].drop(data['Diagnosis'].loc[data['Diagnosis']['date'] == 44237].index, inplace=True)
 
+    # Drop type column from the VaccineBatch
+    data['VaccineBatch'].drop(columns=['type'], inplace=True)
 
     # populating SQL tables from the dataframe sheet by sheet
     for key in tables:

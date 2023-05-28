@@ -51,13 +51,11 @@ CREATE TABLE VaccineBatch
 (
     batchID      VARCHAR(4) PRIMARY KEY,
     amount       INT CHECK (amount >= 10 AND amount <= 20) NOT NULL, --swapped amount and type attributes
-    type         VARCHAR(3)                                NOT NULL,
     manufacturer VARCHAR(2)                                NOT NULL,
     manufDate    DATE                                      NOT NULL,
     expiration   DATE                                      NOT NULL,
     location     VARCHAR(50)                               NOT NULL, --decreased the size
     FOREIGN KEY (manufacturer) REFERENCES Manufacturer (ID),
-    FOREIGN KEY (type) REFERENCES VaccineType (ID),
     FOREIGN KEY (location) REFERENCES VaccinationStations (name)
 );
 
@@ -133,8 +131,8 @@ CREATE TABLE Symptoms
 CREATE TABLE Diagnosis
 (
     patient VARCHAR,
-    symptom VARCHAR NOT NULL,
-    date    DATE    NOT NULL,
+    symptom VARCHAR,
+    date    DATE,
     FOREIGN KEY (patient) REFERENCES Patients (ssNo),
     FOREIGN KEY (symptom) REFERENCES Symptoms (name),
     PRIMARY KEY (patient, symptom, date) --changed the other attribute to symptom, in case one patient reports several symptoms

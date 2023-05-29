@@ -15,6 +15,7 @@ try:
     # Construct the relative file path
     data_path = os.path.join(parent_dir, 'data', 'vaccine-distribution-data.xlsx')
     tablecreation_path = os.path.join(parent_dir, 'code', 'tablecreation.sql')
+    sql_queries_path = os.path.join(parent_dir, 'code', 'SQL_queries.sql')
     # Read the Excel file into a pandas DataFrame
     df = pd.ExcelFile(data_path)
 
@@ -61,9 +62,9 @@ try:
     engine = create_engine(DIALECT + db_uri)
     psql_conn = engine.connect()
 
+    # Execute table creation
     with open(tablecreation_path, 'r') as file:
         script_content = file.read()
-
     cursor = connection.cursor()
     cursor.execute(script_content)
     connection.commit()
@@ -84,11 +85,17 @@ try:
     # Drop type column from the VaccineBatch
     data['VaccineBatch'].drop(columns=['type'], inplace=True)
 
-    # populating SQL tables from the dataframe sheet by sheet
+    # Populating SQL tables from the dataframe sheet by sheet
     for key in tables:
         # print(data[tables[key]])
         data[tables[key]].to_sql(key, con=psql_conn, if_exists='append', index=False)
 
+    # Execute SQL queries
+    with open(sql_queries_path, 'r') as file:
+        script_queries = file.read()
+    cursor = connection.cursor()
+    cursor.execute(script_queries)
+    connection.commit()
 
 except (Exception, Error) as error:
     print("Error while connecting to PostgreSQL", error)

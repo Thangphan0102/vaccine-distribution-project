@@ -1,26 +1,45 @@
-DROP TABLE IF EXISTS transportationlog;
+DROP TABLE IF EXISTS vaccinetype CASCADE;
 
-DROP TABLE IF EXISTS shifts;
+DROP TABLE IF EXISTS manufacturer CASCADE;
 
-DROP TABLE IF EXISTS staffmembers;
+DROP TABLE IF EXISTS vaccinationstations CASCADE;
 
-DROP TABLE IF EXISTS vaccinations;
+DROP TABLE IF EXISTS vaccinebatch CASCADE;
 
-DROP TABLE IF EXISTS vaccinebatch;
+DROP TABLE IF EXISTS transportationlog CASCADE;
 
-DROP TABLE IF EXISTS manufacturer;
+DROP TABLE IF EXISTS staffmembers CASCADE;
 
-DROP TABLE IF EXISTS vaccinetype;
+DROP TABLE IF EXISTS shifts CASCADE;
 
-DROP TABLE IF EXISTS vaccinepatients;
+DROP TABLE IF EXISTS vaccinations CASCADE;
 
-DROP TABLE IF EXISTS vaccinationstations;
+DROP TABLE IF EXISTS patients CASCADE;
 
-DROP TABLE IF EXISTS diagnosis;
+DROP TABLE IF EXISTS vaccinepatients CASCADE;
 
-DROP TABLE IF EXISTS patients;
+DROP TABLE IF EXISTS symptoms CASCADE;
 
-DROP TABLE IF EXISTS symptoms;
+DROP TABLE IF EXISTS diagnosis CASCADE;
+
+CREATE TYPE staff AS ENUM (
+  'nurse',
+  'doctor',
+  'null'
+);
+
+CREATE TYPE weekdays AS ENUM (
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday'
+);
+
+CREATE TYPE genders AS ENUM (
+  'M',
+  'F'
+);
 
 CREATE TABLE VaccineType
 (

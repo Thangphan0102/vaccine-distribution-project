@@ -68,7 +68,7 @@ SELECT p.*,
 FROM (SELECT patientssno, COUNT(*) AS doses_took
       FROM vaccinepatients
       GROUP BY patientssno) pdt
-         JOIN patients p
+         RIGHT JOIN patients p
               ON p.ssno = pdt.patientssno;
 
 -- Query 6: find the total amount of vaccine doses in every clinic, as well as amounts of doses by vaccine type

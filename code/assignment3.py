@@ -100,7 +100,7 @@ try:
     df_vaccine['VaccineCount'] = df_vaccine[['date1', 'date2']].notnull().sum(axis=1)
     vaccine_counts = df_vaccine.groupby('patientssno')['VaccineCount'].sum().astype('str')
     df['VaccineCount'] = df['ssno'].map(vaccine_counts).fillna('0')
-    print(df[df['VaccineCount']=='2'])
+    print(df[df['VaccineCount']=='2']) # the dataframe used for task 6 is df
 
 except (Exception, Error) as error:
     print("Error while connecting to PostgreSQL", error)

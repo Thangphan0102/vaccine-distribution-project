@@ -119,8 +119,104 @@ print(df)
 df_vaccine['VaccineCount'] = df_vaccine[['date1', 'date2']].notnull().sum(axis=1)
 vaccine_counts = df_vaccine.groupby('patientssno')['VaccineCount'].sum().astype('str')
 df['VaccineCount'] = df['ssno'].map(vaccine_counts).fillna('0')
-print(df[df['VaccineCount']=='2']) # the dataframe used for task 6 is df
+print("\nQuestion 5")
+print(df)  # the dataframe used for task 6 is df
 ###########################################################################################
+
+###########################################################################################
+# QUESTION 8
+sql_query_8 = """
+WITH event_amount_info AS (SELECT v.date, vb.location, vb.amount
+                           FROM vaccinations v
+                                    JOIN vaccinebatch vb
+                                         ON v.batchid = vb.batchid),
+     event_patient_info AS (SELECT vp.date, vp.location, COUNT(*) AS total_patients
+                            FROM vaccinepatients vp
+                            GROUP BY vp.date, vp.location)
+SELECT eai.date, eai.location, round((epi.total_patients::NUMERIC / eai.amount), 2) AS attending_percentage
+FROM event_amount_info eai
+         JOIN event_patient_info epi
+              ON eai.date = epi.date
+                  AND eai.location = epi.location;
+"""
+attend_percentage_df = pd.read_sql(sql_query_8, psql_conn)
+print("Question 8:")
+print(attend_percentage_df)
+
+# Expected percentage of patients that will attend
+mean = attend_percentage_df['attending_percentage'].mean()
+print(f"\nThe expected percentage of patientss that will attend is {mean}")
+
+# Standard deviation of the percentage of attending patients
+std = attend_percentage_df['attending_percentage'].std()
+print(f"The standard deviation of the percentage of attedning patients is {std}")
+
+# The estimated amount of vaccines (as a percentage) that should be reserved for each vaccination to minimize waste
+print(f"The estimated amount of vaccines (as a percentage) that should be reserved for each vaccination to minimize "
+      f"waste is {mean + std}")
+###########################################################################################
+
+###########################################################################################
+# QUESTION 10
+
+def find_close_contact_people(ssno, date):
+    """ This function is the generalize function of this task. It takes two arguments as inputs and return a dataframe
+    contains the people that the person of interest have close contact with within 10 days from the date.
+
+    Args:
+        ssno (str): The social security number of the person of interest
+        date (str): The date when the person of interest got the positive test result. It must in format "yyyy-mm-dd"
+
+    Return:
+        result_df (pd.DataFrame): A dataframe contains the ssno of the staffs and the patients that the person of
+        interest may have met.
+    """
+
+    # 1. Find the staffs that the person may have met
+    query_1 = f"""
+    WITH vaccinations_with_weekday AS (SELECT *, REPLACE(TO_CHAR(v.date, 'Day'), ' ', '')::weekdays AS weekday
+                                       FROM vaccinations v)
+    SELECT s.worker
+    FROM vaccinations_with_weekday vww
+             JOIN shifts s
+                  ON vww.location = s.station
+                      AND vww.weekday = s.weekday
+    WHERE (vww.date BETWEEN ('{date}'::DATE - 10) AND '{date}')
+      AND (vww.location = (SELECT DISTINCT station
+                           FROM shifts
+                           WHERE worker = '{ssno}'));
+    """
+
+    staffs_df = pd.read_sql(query_1, psql_conn)
+    staffs_df = staffs_df.rename(columns={'worker': 'ssno'})
+    staffs_df['is_staff'] = True
+
+    # 2. Find the patients that person may have met
+    query_2 = f"""
+    SELECT vp.patientssno
+    FROM vaccinations v
+             JOIN vaccinepatients vp
+                  ON v.date = vp.date
+                      AND v.location = vp.location
+    WHERE (v.date BETWEEN ('{date}'::DATE - 10) AND '{date}')
+      AND (v.location = (SELECT DISTINCT station
+                         FROM shifts
+                         WHERE worker = '{ssno}'));
+    """
+
+    patients_df = pd.read_sql(query_2, psql_conn)
+    patients_df = patients_df.rename(columns={'patientssno': 'ssno'})
+    patients_df['is_staff'] = False
+
+    # 3. Concat these two dataframes into one dataframe
+    result_df = pd.concat((staffs_df, patients_df))
+
+    return result_df
+
+
+print("\nQuestion 10: ")
+print(find_close_contact_people('19740919-7140', '2021-05-15'))
+
 
 connection.close()
 psql_conn.close()

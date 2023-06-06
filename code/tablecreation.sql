@@ -22,6 +22,10 @@ DROP TABLE IF EXISTS symptoms CASCADE;
 
 DROP TABLE IF EXISTS diagnosis CASCADE;
 
+DROP TYPE IF EXISTS staff CASCADE;
+DROP TYPE IF EXISTS weekdays CASCADE;
+DROP TYPE IF EXISTS genders CASCADE;
+
 CREATE TYPE staff AS ENUM (
   'nurse',
   'doctor',
@@ -33,7 +37,9 @@ CREATE TYPE weekdays AS ENUM (
   'Tuesday',
   'Wednesday',
   'Thursday',
-  'Friday'
+  'Friday',
+  'Saturday',
+  'Sunday'
 );
 
 CREATE TYPE genders AS ENUM (

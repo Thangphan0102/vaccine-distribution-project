@@ -4,7 +4,7 @@ from psycopg2 import Error
 import pandas as pd
 from sqlalchemy import create_engine, text
 from datetime import date
-from dateutil.relativedelta import relativedelta 
+from dateutil.relativedelta import relativedelta
 
 try:
 
@@ -34,14 +34,16 @@ except (Exception, Error) as error:
 ###########################################################################################
 # QUESTION 1
 sql_query_1 = """
-SELECT patient AS ssNO, gender, birthday AS dateOfBirth, symptom, date AS diagnosisDate
+SELECT patient AS ssNO, gender, birthday AS dateOfBirth, symptom, DATE AS diagnosisDate
 FROM diagnosis, patients
 WHERE patient = ssno
-order by diagnosisDate;
+ORDER BY diagnosisDate;
 """
 
 df = pd.read_sql_query(sql_query_1, psql_conn)
 df.to_sql("PatientSymptoms", con=psql_conn, if_exists='replace', index=True)
+print("Question 1:")
+print(df)
 psql_conn.commit()
 ###########################################################################################
 
@@ -63,7 +65,7 @@ vaccinebatch vb1 ON v1.batchid = vb1.batchid
 LEFT JOIN
 manufacturer m1 ON vb1.manufacturer = m1.id
 LEFT JOIN
-vaccinepatients vp2 ON vp1.patientssno = vp2.patientssno and vp2.date != vp1.date 
+vaccinepatients vp2 ON vp1.patientssno = vp2.patientssno AND vp2.date != vp1.date 
 LEFT JOIN
 vaccinations v2 ON vp2.date = v2.date AND vp2.location = v2.location 
 LEFT JOIN
@@ -76,6 +78,8 @@ v1.date < v2.date OR v2.date IS NULL
 
 df_vaccine = pd.read_sql_query(sql_query_2, psql_conn)
 df_vaccine.to_sql("PatientVaccineInfo", con=psql_conn, if_exists='replace', index=True)
+print("\nQuestion 2:")
+print(df_vaccine)
 psql_conn.commit()
 ###########################################################################################
 
@@ -85,11 +89,11 @@ sql_query_3 = """
 SELECT *
 FROM "PatientSymptoms"
 """
-
+print("\nQuestion 3")
 print('Most frequent symptoms')
 df = pd.read_sql_query(sql_query_3, psql_conn)
-df1=df[df['gender']=='M']
-df2=df[df['gender']=='F']
+df1 = df[df['gender'] == 'M']
+df2 = df[df['gender'] == 'F']
 print('For Males:\n' + df1['symptom'].value_counts().head(3).to_string() + '\n')
 print('For Females:\n' + df2['symptom'].value_counts().head(3).to_string() + '\n')
 ###########################################################################################
@@ -104,7 +108,10 @@ FROM patients
 df = pd.read_sql_query(sql_query_4, psql_conn)
 bins = [0, 10, 20, 40, 60, float('inf')]
 labels = ['0-10', '10-20', '20-40', '40-60', '60+']
-df['ageGroup'] = pd.cut(df['birthday'].apply(lambda x: relativedelta(date.today(), x).years), bins=bins, labels=labels, right=False)
+df['ageGroup'] = pd.cut(df['birthday'].apply(lambda x: relativedelta(date.today(), x).years), bins=bins, labels=labels,
+                        right=False)
+print("\nQuestion 4")
+print(df)
 ###########################################################################################
 
 ###########################################################################################

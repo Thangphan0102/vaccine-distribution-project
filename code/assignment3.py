@@ -5,6 +5,7 @@ import pandas as pd
 from sqlalchemy import create_engine, text
 from datetime import date
 from dateutil.relativedelta import relativedelta
+import matplotlib.pyplot as plt
 
 try:
 
@@ -124,6 +125,98 @@ print(df)  # the dataframe used for task 6 is df
 ###########################################################################################
 
 ###########################################################################################
+# QUESTION 6
+# using pandas' pivot_table to aggregate data into a new df
+df_pivoted = df.pivot_table(index='VaccineCount', values = 'ssno', columns='ageGroup',
+                            aggfunc='count').apply(lambda x: x*100/sum(x))
+print("\nQuestion 6")
+print(df_pivoted)
+###########################################################################################
+
+###########################################################################################
+# QUESTION 7
+# first creating a df containing the vaccine types and frequency of symptoms caused by vaccines
+sql_query_7 = """
+WITH symptom_cases_by_type AS (WITH symptom_report AS (SELECT DISTINCT vp.patientssno,
+                                                                       d.symptom,
+                                                                       d.date  AS recorded_date,
+                                                                       vp.date AS vaccination_date,
+                                                                       vp.location
+                                                       FROM diagnosis d
+                                                                JOIN vaccinepatients vp
+                                                                     ON d.date >= vp.date
+                                                                         AND d.patient = vp.patientssno
+                                                                JOIN vaccinatedpatients vdp
+                                                                     ON vdp.ssno = vp.patientssno
+                                                       WHERE vdp.vaccinationStatus = 0
+                                                       UNION
+                                                       SELECT *
+                                                       FROM (SELECT DISTINCT vp.patientssno,
+                                                                             d.symptom,
+                                                                             d.date                                          AS recorded_date,
+                                                                             MAX(vp.date) OVER (PARTITION BY vp.patientssno) AS vaccination_date,
+                                                                             vp.location
+                                                             FROM diagnosis d
+                                                                      JOIN vaccinepatients vp
+                                                                           ON d.patient = vp.patientssno
+                                                                      JOIN vaccinatedpatients vdp
+                                                                           ON vdp.ssno = vp.patientssno
+                                                             WHERE vdp.vaccinationStatus = 1) dvv
+                                                       WHERE dvv.recorded_date >= dvv.vaccination_date),
+                                    vaccine_type_used AS (SELECT DISTINCT vp.date, vp.location, mf.vaccine
+                                                          FROM vaccinepatients vp
+                                                                   JOIN vaccinations v
+                                                                        ON v.date = vp.date
+                                                                            AND v.location = vp.location
+                                                                   JOIN vaccinebatch vb
+                                                                        ON vb.batchid = v.batchid
+                                                                   JOIN manufacturer mf
+                                                                        ON mf.id = vb.manufacturer)
+                               SELECT vtu.vaccine, sr.symptom, COUNT(*) AS number_of_cases
+                               FROM symptom_report sr
+                                        JOIN vaccine_type_used vtu
+                                             ON sr.vaccination_date = vtu.date
+                                                 AND sr.location = vtu.location
+                               GROUP BY vtu.vaccine, sr.symptom),
+     total_cases AS (WITH vaccine_type_used AS (SELECT DISTINCT vp.date, vp.location, mf.vaccine
+                                                FROM vaccinepatients vp
+                                                         JOIN vaccinations v
+                                                              ON v.date = vp.date
+                                                                  AND v.location = vp.location
+                                                         JOIN vaccinebatch vb
+                                                              ON vb.batchid = v.batchid
+                                                         JOIN manufacturer mf
+                                                              ON mf.id = vb.manufacturer)
+                     SELECT vtu.vaccine, COUNT(*) AS total_patients
+                     FROM vaccine_type_used vtu
+                              JOIN vaccinepatients vp
+                                   ON vtu.location = vp.location
+                                       AND vtu.date = vp.date
+                     GROUP BY vtu.vaccine)
+SELECT scbt.vaccine, scbt.symptom, (number_of_cases::REAL / total_patients::REAL) AS frequency
+FROM symptom_cases_by_type scbt
+         JOIN total_cases tc
+              ON scbt.vaccine = tc.vaccine;
+"""
+df = pd.read_sql_query(sql_query_7, psql_conn) #reading the sql query
+df_pivoted = df.pivot(index='symptom', values = 'frequency', columns='vaccine') #pivoting the resulting df
+def label_symptom(value): #defining a function to label the frequencies
+    if value >= 0.1:
+        return "very common"
+    elif value >= 0.05:
+        return "common"
+    elif value > 0.0:
+        return "rare"
+    else:
+        return "-"
+
+
+df_pivoted = df_pivoted.applymap(label_symptom)
+print("\nQuestion 7")
+print(df_pivoted)
+###########################################################################################
+
+###########################################################################################
 # QUESTION 8
 sql_query_8 = """
 WITH event_amount_info AS (SELECT v.date, vb.location, vb.amount
@@ -140,7 +233,7 @@ FROM event_amount_info eai
                   AND eai.location = epi.location;
 """
 attend_percentage_df = pd.read_sql(sql_query_8, psql_conn)
-print("Question 8:")
+print("\nQuestion 8:")
 print(attend_percentage_df)
 
 # Expected percentage of patients that will attend
@@ -154,6 +247,43 @@ print(f"The standard deviation of the percentage of attedning patients is {std}"
 # The estimated amount of vaccines (as a percentage) that should be reserved for each vaccination to minimize waste
 print(f"The estimated amount of vaccines (as a percentage) that should be reserved for each vaccination to minimize "
       f"waste is {mean + std}")
+###########################################################################################
+
+###########################################################################################
+# QUESTION 9
+# query to get the dates of the first vaccination from PatientVaccineInfo table
+sql_query_9 = """
+    SELECT date1 AS date, COUNT(patientssno) AS perDay
+    FROM "PatientVaccineInfo"
+    GROUP BY date1 ORDER BY date1;
+"""
+df_9 = pd.read_sql(sql_query_9, psql_conn)
+patients = df_9['perday']
+dates = pd.to_datetime(df_9['date'])
+dates = dates.dt.strftime('%d/%m') #changed the date format
+
+sql_query_9_2 = """
+    SELECT date2 AS date, COUNT(patientssno) AS perDay
+    FROM "PatientVaccineInfo"
+    WHERE date2 IS NOT NULL
+    GROUP BY date2 ORDER BY date2;
+"""
+df_9_2 = pd.read_sql(sql_query_9_2, psql_conn)
+patients_2 = df_9_2['perday']
+dates_2 = pd.to_datetime(df_9_2['date'])
+dates_2 = dates_2.dt.strftime('%d/%m') #changed the date format
+print(dates_2)
+
+# Plot the data using cumsum() and strftime()
+total_patients = patients.cumsum()
+total_patients_2 = patients_2.cumsum()
+fig, ax = plt.subplots()
+ax.plot(dates, total_patients, label = '1 dose')
+ax.plot(dates_2, total_patients_2, label = '2 doses')
+ax.set(xlabel='Date', ylabel='Total Vaccinated Patients', title='Total Vaccinated Patients by Date')
+plt.xticks(rotation=45)
+plt.legend()
+plt.show()
 ###########################################################################################
 
 ###########################################################################################

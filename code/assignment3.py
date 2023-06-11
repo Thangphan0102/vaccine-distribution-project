@@ -108,7 +108,7 @@ FROM patients
 
 df = pd.read_sql_query(sql_query_4, psql_conn)
 bins = [0, 10, 20, 40, 60, float('inf')]
-labels = ['0-10', '10-20', '20-40', '40-60', '60+']
+labels = ['0-9', '10-19', '20-39', '40-59', '60+']
 df['ageGroup'] = pd.cut(df['birthday'].apply(lambda x: relativedelta(date.today(), x).years), bins=bins, labels=labels,
                         right=False)
 print("\nQuestion 4")
@@ -272,7 +272,6 @@ df_9_2 = pd.read_sql(sql_query_9_2, psql_conn)
 patients_2 = df_9_2['perday']
 dates_2 = pd.to_datetime(df_9_2['date'])
 dates_2 = dates_2.dt.strftime('%d/%m') #changed the date format
-print(dates_2)
 
 # Plot the data using cumsum() and strftime()
 total_patients = patients.cumsum()

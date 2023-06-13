@@ -4,6 +4,5 @@ venv/
 data/
 .ipynb_checkpoints/
 notebooks/
-.streamlit/
 __pycache__
 scrape.py

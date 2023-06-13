@@ -1,6 +1,23 @@
 # Project Vaccine Distribution
 This repository provides a basic structure for collaborating with your teammates on project Vaccine Distribution. Read the following content carefully to understand the file structure as well as how to work with git and PostgreSQL. 
 
+## How to run the web application
+
+1. Create a virtual environment and install the dependencies
+
+```
+cd cs-a-1155-2023-vaccine-distribution-group-2
+python -m venv .
+source ./venv/bin/activate
+pip install -r ./code/requirements.txt
+```
+
+2. Run the following command in the terminal
+
+```
+streamlit run ./code/app.py
+```
+
 ## How to work with git
 
 Here's a list of recommended next steps to make it easy for you to get started with the project. However, understanding the concept of git workflow and git fork is necessary and essential. 

@@ -66,9 +66,9 @@ vaccinebatch vb1 ON v1.batchid = vb1.batchid
 LEFT JOIN
 manufacturer m1 ON vb1.manufacturer = m1.id
 LEFT JOIN
-vaccinepatients vp2 ON vp1.patientssno = vp2.patientssno AND vp2.date != vp1.date 
+vaccinepatients vp2 ON vp1.patientssno = vp2.patientssno AND vp2.date != vp1.date
 LEFT JOIN
-vaccinations v2 ON vp2.date = v2.date AND vp2.location = v2.location 
+vaccinations v2 ON vp2.date = v2.date AND vp2.location = v2.location
 LEFT JOIN
 vaccinebatch vb2 ON v2.batchid = vb2.batchid
 LEFT JOIN

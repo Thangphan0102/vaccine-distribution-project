@@ -3,6 +3,7 @@ venv/
 .idea
 data/
 .ipynb_checkpoints/
-data_analysis.ipynb
+notebooks/
 .streamlit/
 __pycache__
+scrape.py

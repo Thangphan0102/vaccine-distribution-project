@@ -3,7 +3,6 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 import plotly.express as px
-import pydeck as pdk
 
 from utils import *
 

@@ -12,11 +12,13 @@ def add_vaccination_status(row):
         return 0
 
 
-def find_shift(ssno, conn):
+def find_shift(name, conn):
     query = f"""
-    SELECT *
-    FROM shifts
-    WHERE worker = '{ssno}';
+    SELECT s.station, s.weekday
+    FROM shifts s
+             JOIN staffmembers sm
+                  ON s.worker = sm.ssno
+    WHERE sm.name = '{name}';
     """
 
     df = conn.query(query)

@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from sqlalchemy import create_engine
 import plotly.express as px
+import plotly.graph_objects as go
 
 from utils import *
 
@@ -24,12 +25,12 @@ with st.container():
     st.subheader("Cumulative number of vaccinated people")
 
     query = """
-    SELECT t1.date as date, num_of_vaccinated, num_of_fully_vaccinated
+    SELECT t1.date AS date, num_of_vaccinated, num_of_fully_vaccinated
     FROM (SELECT date1 AS date, COUNT(date1) AS num_of_vaccinated
           FROM "PatientVaccineInfo"
           GROUP BY date1
           ORDER BY date1) t1
-             left JOIN (SELECT date2 AS date, COUNT(date2) AS num_of_fully_vaccinated
+             LEFT JOIN (SELECT date2 AS date, COUNT(date2) AS num_of_fully_vaccinated
                    FROM "PatientVaccineInfo"
                    GROUP BY date2
                    ORDER BY date2) t2
@@ -103,7 +104,6 @@ with st.container():
                                           hovertemplate=t.hovertemplate.replace(t.name, new_names[t.name])))
     st.plotly_chart(fig, use_container_width=True)
 
-
 # Horizontal line
 st.divider()
 
@@ -148,9 +148,10 @@ with st.container():
 # Horizontal line
 st.divider()
 
-# Third chart
+# Vaccination status of patients
 with st.container():
-    st.subheader("Vaccination status")
+    st.subheader("Vaccination status of patients")
+    st.markdown("*We assume that patients' status is the number of dose(s) that they took*")
 
     query = """
     SELECT p.*, pvi.vaccinetype1, pvi.vaccinetype2
@@ -161,7 +162,7 @@ with st.container():
 
     df = conn.query(query)
     bins = [0, 10, 20, 40, 60, float('inf')]
-    labels = ['0-10', '10-20', '20-40', '40-60', '60+']
+    labels = ['0-10', '11-20', '22-40', '41-60', '60+']
     df['ageGroup'] = pd.cut(df['birthday'].apply(lambda x: relativedelta(date.today(), x).years), bins=bins,
                             labels=labels,
                             right=False)
@@ -228,21 +229,151 @@ with st.container():
             )
             st.plotly_chart(fig)
 
+# Horizontal line
+st.divider()
+
+# Vaccination status of staffs
+with st.container():
+    st.subheader("Vaccination status of staffs")
+    st.markdown("*We assume that staffs' status is (1) if he/she is fully vaccinated or (0) if he/she hasn't received "
+                "any vaccination*")
+
+    df = conn.query("SELECT * FROM staffmembers;")
+    df['status'] = df['status'].astype('category')
+    bins = [0, 10, 20, 40, 60, float('inf')]
+    labels = ['0-10', '11-20', '22-40', '41-60', '60+']
+    df['ageGroup'] = pd.cut(df['birthday'].apply(lambda x: relativedelta(date.today(), x).years), bins=bins,
+                            labels=labels,
+                            right=False)
+    df = df.groupby(['ageGroup', 'status'], as_index=False).count().loc[:, ['ageGroup', 'status', 'ssno']]
+    df = df.merge(df[['ageGroup', 'ssno']].groupby(['ageGroup'], as_index=False).sum(), on='ageGroup')
+    df = df.rename(columns={'ssno_x': "number_of_people",
+                            'ssno_y': "total_number_of_people"})
+    df['proportion'] = df['number_of_people'] / df['total_number_of_people'] * 100
+    df['proportion'] = df['proportion'].fillna(0)
+
+    kind = st.radio("Show", ('Number of people by age group', 'Proportion of people by age group'), key='staff_age',
+                    horizontal=True)
+
+    if kind == "Number of people by age group":
+        fig = px.bar(df, x='ageGroup', y='number_of_people', color='status')
+        fig.update_layout(
+            xaxis_title='Age group',
+            yaxis_title='Number of people',
+            legend_title='Status'
+        )
+        st.plotly_chart(fig)
+    else:
+        fig = px.bar(
+            df,
+            x='ageGroup',
+            y='proportion',
+            color='status')
+        fig.update_layout(
+            xaxis_title='Age group',
+            yaxis_title='Proportion',
+            legend_title='Status'
+        )
+        st.plotly_chart(fig)
+
+# Horizontal line
+st.divider()
+
+# Diagnosis chart
+with st.container():
+    st.subheader("Symptoms chart")
+
+    #
+    query = """
+    SELECT d.symptom, COUNT(*) AS cases
+    FROM diagnosis d
+    GROUP BY d.symptom;
+    """
+    df_general = conn.query(query)
+
+    #
+    query = """
+    WITH symptom_report AS (SELECT DISTINCT vp.patientssno,
+                                        d.symptom,
+                                        d.date  AS recorded_date,
+                                        vp.date AS vaccination_date,
+                                        vp.location
+                        FROM diagnosis d
+                                 JOIN vaccinepatients vp
+                                      ON d.date >= vp.date
+                                          AND d.patient = vp.patientssno
+                                 JOIN vaccinatedpatients vdp
+                                      ON vdp.ssno = vp.patientssno
+                        WHERE vdp.vaccinationStatus = 0
+                        UNION
+                        SELECT *
+                        FROM (SELECT DISTINCT vp.patientssno,
+                                              d.symptom,
+                                              d.date                                          AS recorded_date,
+                                              MAX(vp.date) OVER (PARTITION BY vp.patientssno) AS vaccination_date,
+                                              vp.location
+                              FROM diagnosis d
+                                       JOIN vaccinepatients vp
+                                            ON d.patient = vp.patientssno
+                                       JOIN vaccinatedpatients vdp
+                                            ON vdp.ssno = vp.patientssno
+                              WHERE vdp.vaccinationStatus = 1) dvv
+                        WHERE dvv.recorded_date >= dvv.vaccination_date)
+    SELECT symptom, COUNT(*) AS cases
+    FROM symptom_report
+    GROUP BY symptom;
+    """
+    df_vaccine = conn.query(query)
+
+    #
+    df_symptom = conn.query("SELECT * FROM symptoms;")
+
+    df = df_general.merge(df_vaccine, on='symptom', suffixes=['_general', '_vaccine'])
+    df = df.merge(df_symptom, left_on='symptom', right_on='name').drop(columns='name')
+    df['criticality'] = df['criticality'].astype('bool')
+
+    _hovertemplate = '<b>Symptom: %{x}</b>' + '<br>Cases: %{y}'
+
+    fig = go.Figure(data=[
+        go.Bar(name='General', x=df.loc[~df['criticality'], 'symptom'], y=df.loc[~df['criticality'], 'cases_general'],
+               marker={'color': '#285AC2'}, legendgroup='not-critical', legendgrouptitle_text='Not critical',
+               hovertemplate=_hovertemplate),
+        go.Bar(name='Vaccine', x=df.loc[~df['criticality'], 'symptom'], y=df.loc[~df['criticality'], 'cases_vaccine'],
+               marker={'color': '#87BFFF'}, legendgroup='not-critical', legendgrouptitle_text='Not critical',
+               hovertemplate=_hovertemplate),
+        go.Bar(name='General', x=df.loc[df['criticality'], 'symptom'], y=df.loc[df['criticality'], 'cases_general'],
+               marker={'color': '#EB3E2D'}, legendgroup='critical', legendgrouptitle_text='Critical',
+               hovertemplate=_hovertemplate),
+        go.Bar(name='Vaccine', x=df.loc[df['criticality'], 'symptom'], y=df.loc[df['criticality'], 'cases_vaccine'],
+               marker={'color': '#FF7A74'}, legendgroup='critical',
+               hovertemplate=_hovertemplate),
+    ])
+
+    fig.update_layout(legend=dict(
+        orientation='h',
+        y=1.02,
+        yanchor='bottom',
+        x=0.5,
+        xanchor='center'
+    ))
+
+    st.plotly_chart(fig, use_container_width=True)
+
+
 # Shift finder
 with st.container():
-
     st.subheader("Find the shifts here")
 
     tab3, tab4 = st.tabs(['By worker', 'By station and weekday'])
 
     with tab3:
-        ssno = st.text_input("Enter your social security number:")
+        staff_name = st.text_input("Enter your name:")
 
-        if ssno:
-            df = find_shift(ssno, conn)
+        if staff_name:
+            df = find_shift(staff_name, conn)
 
             if len(df) == 0:
-                st.markdown(f'Couldn\'t find any shifts for person with the social security number "{ssno}"')
+                st.markdown(f'Couldn\'t find any shifts of "{staff_name}"')
             else:
                 st.dataframe(df, width=600, hide_index=True)
 
@@ -262,10 +393,13 @@ with st.container():
 
         if station_option and weekday_options:
             query = f"""
-                    SELECT *
-                    FROM shifts
+                    SELECT s.station, s.weekday, sm.name
+                    FROM shifts s 
+                        JOIN staffmembers sm
+                            ON s.worker = sm.ssno
                         WHERE station = '{station_option}'
-                            AND weekday IN ({format_list_to_sql(weekday_options)});
+                            AND weekday IN ({format_list_to_sql(weekday_options)})
+                        ORDER BY s.weekday;
                     """
 
             st.dataframe(conn.query(query), width=600, hide_index=True)

@@ -15,8 +15,8 @@ cd cs-a-1155-2023-vaccine-distribution-group-2
 2. Create a new virtual environment and install the dependencies
 
 ```
-python3 -m venv .
-source ./venv/bin/activate
+python3 -m venv venv
+source venv/bin/activate
 pip3 install -r ./code/requirements.txt
 ```
 

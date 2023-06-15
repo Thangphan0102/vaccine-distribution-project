@@ -3,16 +3,24 @@ This repository provides a basic structure for collaborating with your teammates
 
 ## How to run the web application
 
-1. Create a virtual environment and install the dependencies
+- Instruction of how to run the web application
+
+1. Clone the repository to your local machine
 
 ```
+git clone git@version.aalto.fi:phanct1/cs-a-1155-2023-vaccine-distribution-group-2.git
 cd cs-a-1155-2023-vaccine-distribution-group-2
-python -m venv .
-source ./venv/bin/activate
-pip install -r ./code/requirements.txt
 ```
 
-2. Run the following command in the terminal
+2. Create a new virtual environment and install the dependencies
+
+```
+python3 -m venv .
+source ./venv/bin/activate
+pip3 install -r ./code/requirements.txt
+```
+
+3. Run the application
 
 ```
 streamlit run ./code/app.py

@@ -92,8 +92,15 @@ with st.container():
         legend=dict(
             y=0.99,
             x=0.01
-        )
+        ),
+        legend_title_text='',
+        xaxis_title='Date',
+        yaxis_title='Cumulative number of people',
     )
+    new_names = {'cumsum_num_of_vaccinated': 'Vaccinated people',
+                 'cumsum_num_of_fully_vaccinated': 'Fully vaccinated people'}
+    fig.for_each_trace(lambda t: t.update(name=new_names[t.name],
+                                          hovertemplate=t.hovertemplate.replace(t.name, new_names[t.name])))
     st.plotly_chart(fig, use_container_width=True)
 
 
@@ -122,12 +129,20 @@ with st.container():
 
     with tab1:
         fig = px.bar(df, x='vaccine', y='count', color='vaccine', category_orders={'vaccine': ['V01', 'V02', 'V03']})
+        fig.update_layout(
+            xaxis_title='Vaccine type',
+            yaxis_title='Number of people',
+            legend_title='Vaccine type'
+        )
         st.plotly_chart(fig)
 
     with tab2:
         fig = px.pie(df, names='vaccine', values='count', color='vaccine',
                      category_orders={'vaccine': ['V01', 'V02', 'V03']})
         fig.update_traces(textposition='inside', textinfo='percent+label')
+        fig.update_layout(
+            legend_title='Vaccine type'
+        )
         st.plotly_chart(fig)
 
 # Horizontal line
@@ -169,9 +184,19 @@ with st.container():
 
         if kind == "Number of people":
             fig = px.bar(df_groupby_age, x='ageGroup', y='number_of_people', color='status')
+            fig.update_layout(
+                xaxis_title='Age group',
+                yaxis_title='Number of people',
+                legend_title='Status'
+            )
             st.plotly_chart(fig)
         else:
             fig = px.bar(df_groupby_age, x='ageGroup', y='proportion', color='status')
+            fig.update_layout(
+                xaxis_title='Age group',
+                yaxis_title='Proportion',
+                legend_title='Status'
+            )
             st.plotly_chart(fig)
 
     with tab2:
@@ -188,9 +213,19 @@ with st.container():
 
         if kind == "Number of people":
             fig = px.bar(df_groupby_gender, x='gender', y='number_of_people', color='status')
+            fig.update_layout(
+                xaxis_title='Age group',
+                yaxis_title='Number of people',
+                legend_title='Status'
+            )
             st.plotly_chart(fig)
         else:
             fig = px.bar(df_groupby_gender, x='gender', y='proportion', color='status')
+            fig.update_layout(
+                xaxis_title='Age group',
+                yaxis_title='Proportion',
+                legend_title='Status'
+            )
             st.plotly_chart(fig)
 
 # Shift finder
@@ -214,23 +249,22 @@ with st.container():
     with tab4:
         available_stations = conn.query("SELECT DISTINCT station FROM shifts;")
 
-        station_options = st.multiselect(
+        station_option = st.selectbox(
             "Select your working station",
             available_stations,
-            []
         )
 
         weekday_options = st.multiselect(
-            "Select your working day",
+            "Select your working day(s)",
             ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'),
             []
         )
 
-        if station_options and weekday_options:
+        if station_option and weekday_options:
             query = f"""
                     SELECT *
                     FROM shifts
-                        WHERE station IN ({format_list_to_sql(station_options)})
+                        WHERE station = '{station_option}'
                             AND weekday IN ({format_list_to_sql(weekday_options)});
                     """
 

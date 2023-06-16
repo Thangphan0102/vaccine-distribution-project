@@ -18,7 +18,8 @@ st.set_page_config(
 conn = st.experimental_connection('postgres', type='sql')
 
 # Title
-st.title("Data visualization")
+st.title("Dashboard :bar_chart:")
+
 
 # First chart
 with st.container():
@@ -107,7 +108,7 @@ with st.container():
 # Horizontal line
 st.divider()
 
-# Second chart
+# Vaccine allocation
 with st.container():
     st.subheader("Vaccine allocation")
 
@@ -128,7 +129,14 @@ with st.container():
     tab1, tab2 = st.tabs(["Bar", "Pie"])
 
     with tab1:
-        fig = px.bar(df, x='vaccine', y='count', color='vaccine', category_orders={'vaccine': ['V01', 'V02', 'V03']})
+        fig = px.bar(
+            df,
+            x='vaccine',
+            y='count',
+            color='vaccine',
+            category_orders={'vaccine': ['V01', 'V02', 'V03']},
+            text_auto=True
+        )
         fig.update_layout(
             xaxis_title='Vaccine type',
             yaxis_title='Number of people',
@@ -359,10 +367,26 @@ with st.container():
 
     st.plotly_chart(fig, use_container_width=True)
 
+# Horizontal line
+st.divider()
+
+# Map
+with st.container():
+    st.subheader("Health station map")
+    df = conn.query("SELECT * FROM healthstation;")
+
+    fig = px.scatter_mapbox(df, lat='lat', lon='lon', hover_name='station', zoom=10)
+    fig.update_layout(mapbox_style='carto-positron',
+                      mapbox_bounds={"west": 18, "east": 33, "south": 59.5, "north": 70.5},
+                      height=1000)
+    st.plotly_chart(fig, use_container_width=True)
+
+# Horizontal line
+st.divider()
 
 # Shift finder
 with st.container():
-    st.subheader("Find the shifts here")
+    st.subheader("Find the shifts")
 
     tab3, tab4 = st.tabs(['By worker', 'By station and weekday'])
 
@@ -373,8 +397,9 @@ with st.container():
             df = find_shift(staff_name, conn)
 
             if len(df) == 0:
-                st.markdown(f'Couldn\'t find any shifts of "{staff_name}"')
+                st.error(f'Couldn\'t find any shifts of "{staff_name}"', icon="❌")
             else:
+                st.success(f'Founded the shifts for "{staff_name}"', icon="✔")
                 st.dataframe(df, width=600, hide_index=True)
 
     with tab4:
@@ -407,11 +432,41 @@ with st.container():
 # Horizontal line
 st.divider()
 
-# Map
+# Find transportation log
 with st.container():
-    st.subheader("Health station map")
-    df = conn.query("SELECT * FROM healthstation;")
+    st.subheader("Find the transportation log")
 
-    fig = px.scatter_mapbox(df, lat='lat', lon='lon', hover_name='station', zoom=9)
-    fig.update_layout(mapbox_style='carto-positron')
-    st.plotly_chart(fig, use_container_width=True)
+    arrival_info_query = """
+    WITH cte AS (SELECT *
+             FROM (SELECT *, MAX(tl.datearr) OVER (PARTITION BY tl.batchid) AS last_date
+                   FROM transportationlog tl) t1
+             WHERE t1.last_date = t1.datearr)
+    SELECT vb.batchid, vb.location, cte.arrival
+    FROM cte
+    RIGHT JOIN vaccinebatch vb
+    ON cte.batchid = vb.batchid;
+    """
+
+    arrival_info_df = conn.query(arrival_info_query)
+    arrival_info_df['status'] = arrival_info_df['location'] == arrival_info_df['arrival']
+    arrival_info_df = arrival_info_df.set_index('batchid')
+
+    batchid = st.text_input("Enter the vaccine batch ID:")
+    if batchid:
+        query = f"""
+        SELECT *
+        FROM transportationlog
+        WHERE batchid = '{batchid}';
+        """
+
+        df = conn.query(query)
+
+        if len(df) > 0:
+            st.success(f'Founded the transportation log for "{batchid}"', icon="✔")
+            st.dataframe(df, hide_index=True, width=600)
+            if not arrival_info_df.loc[f'{batchid}', 'status']:
+                st.warning(f'The vaccine batch "{batchid}" has not yet arrived at the right destination! '
+                           f'(The last arrival destination is different from the current location)', icon="❗")
+
+        else:
+            st.error(f'Couldn\'t find the transportation log for "{batchid}"', icon="❌")

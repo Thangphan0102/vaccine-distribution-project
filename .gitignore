@@ -6,3 +6,4 @@ data/
 notebooks/
 __pycache__
 scrape.py
+.streamlit

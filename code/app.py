@@ -393,7 +393,7 @@ with st.container():
     tab3, tab4 = st.tabs(['By worker', 'By station and weekday'])
 
     with tab3:
-        staff_name = st.text_input("Enter your name:")
+        staff_name = st.text_input("Enter your name:", placeholder="For example: Jeramy Feest")
 
         if staff_name:
             df = find_shift(staff_name, conn)
@@ -453,7 +453,7 @@ with st.container():
     arrival_info_df['status'] = arrival_info_df['location'] == arrival_info_df['arrival']
     arrival_info_df = arrival_info_df.set_index('batchid')
 
-    batchid = st.text_input("Enter the vaccine batch ID:")
+    batchid = st.text_input("Enter the vaccine batch ID:", placeholder="For example: B01")
     if batchid:
         query = f"""
         SELECT *

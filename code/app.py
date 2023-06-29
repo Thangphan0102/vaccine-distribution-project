@@ -17,7 +17,7 @@ st.set_page_config(
 
 # Connect to database
 # conn = st.experimental_connection('postgres', type='sql')
-conn = psycopg2.connect(**st.secrets["connections.postgres"])
+conn = psycopg2.connect(**st.secrets["postgres"])
 
 @st.cache_data(ttl=600)
 def run_query(query):

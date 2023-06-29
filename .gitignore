@@ -1,7 +1,6 @@
 venv/
 .DS_Store
 .idea
-data/
 .ipynb_checkpoints/
 notebooks/
 __pycache__
